@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parenting Quiz</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Welcome Screen -->
+  <div id="welcome-screen" class="active">
+    <h1>Welcome to the Parenting Quiz!</h1>
+    <p>Please enter your name to begin:</p>
+    <input type="text" id="user-name" placeholder="Your Name">
+    <button onclick="startQuiz()">Start Quiz</button>
+  </div>
+
+  <!-- Quiz Container -->
+  <div id="quiz-container">
+    <h1 id="quiz-title">Parenting Quiz</h1>
+    <div id="question-container">
+      <p id="question-text">Loading question...</p>
+      <button onclick="submitAnswer('A')">A) Option A</button>
+      <button onclick="submitAnswer('B')">B) Option B</button>
+      <button onclick="submitAnswer('C')">C) Option C</button>
+      <button onclick="submitAnswer('D')">D) Option D</button>
+    </div>
+    <button id="submit-quiz-button" onclick="submitQuiz()">Submit Quiz</button>
+  </div>
+
+  <!-- Post-Quiz Screen with View Scoreboard Button -->
+  <div id="post-quiz">
+    <h3 id="thank-you-message">Thank you for completing the quiz!</h3>
+    <button onclick="goToScoreboard()">View Scoreboard</button>
+  </div>
+
+  <script>
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let userName = '';
+    let userAnswers = [];
+
+    // Fetch questions and answers from answers.json
+    fetch('answers.json')
+      .then(response => response.json())
+      .then(data => {
+        questions = data.questions;
+        console.log("Questions loaded:", questions);
+      })
+      .catch(error => {
+        console.error('Error loading questions:', error);
+      });
+
+    // Start the quiz after user enters their name
+    function startQuiz() {
+      userName = document.getElementById('user-name').value;
+      if (userName && questions.length > 0) {
+        document.getElementById('welcome-screen').classList.remove('active');
+        document.getElementById('quiz-container').classList.add('active');
+        loadQuestion();
+      } else {
+        alert("Please enter your name or ensure questions are loaded.");
+      }
+    }
+
+    // Load question dynamically from the JSON file
+    function loadQuestion() {
+      const question = questions[currentQuestionIndex];
+      document.getElementById('question-text').innerText = question.text;
+      const buttons = document.querySelectorAll('#question-container button');
+      buttons.forEach((button, index) => {
+        button.innerText = question.options[index];
+        button.style.display = 'inline-block';
+      });
+      
+      // If it's the last question, show the "Submit Quiz" button
+      if (currentQuestionIndex === questions.length - 1) {
+        document.getElementById('submit-quiz-button').classList.add('show');
+      } else {
+        document.getElementById('submit-quiz-button').classList.remove('show');
+      }
+    }
+
+    // Submit answer and move to the next question
+    function submitAnswer(answer) {
+      const correctAnswer = questions[currentQuestionIndex].correctAnswer;
+      userAnswers.push({ answer, correct: answer === correctAnswer });
+      currentQuestionIndex++;
+      if (currentQuestionIndex < questions.length) {
+        loadQuestion();
+      } else {
+        document.getElementById('submit-quiz-button').classList.add('show');
+        console.log("Reached last question, submit button should be visible");
+      }
+    }
+
+    // Submit the quiz results to responses.json and display thank you message
+    async function submitQuiz() {
+      console.log("Submitting quiz...");
+      const data = {
+        name: userName,
+        answers: userAnswers,
+        time: new Date().toISOString() // Record submission time
+      };
+
+      // POST the user responses to 'responses.json' (mock server or local server should handle this)
+      await fetch('http://localhost:8080/submit-quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).then(() => {
+        console.log("Quiz submitted successfully");
+        
+        // Display thank you message and the "View Scoreboard" button
+        document.getElementById('quiz-container').style.display = 'none'; // Hide quiz
+        document.getElementById('post-quiz').style.display = 'block';  // Show post-quiz screen
+        document.getElementById('thank-you-message').innerText = `Thank you, ${userName}!`;
+      }).catch(error => {
+        console.error("Failed to submit quiz:", error);
+      });
+    }
+
+    // Navigate to the scoreboard page
+    function goToScoreboard() {
+      window.location.href = "scoreboard.html";
+    }
+  </script>
+
+</body>
+</html>

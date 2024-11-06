@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Scoreboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div id="scoreboard-container">
+    <h1>Quiz Scoreboard</h1>
+    <table id="scoreboard-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Name</th>
+          <th>Scores (Out of 5)</th>
+        </tr>
+      </thead>
+      <tbody id="scoreboard-body">
+        <!-- Dynamic scoreboard data will go here -->
+      </tbody>
+    </table>
+    <button id="back-button" onclick="goBack()">Back to Quiz</button>
+  </div>
+
+  <script>
+    // Function to load data from responses.json and populate the scoreboard
+    async function loadScoreboard() {
+      try {
+        const response = await fetch('responses.json');
+        const data = await response.json();
+
+        const scoreboardBody = document.getElementById('scoreboard-body');
+        scoreboardBody.innerHTML = ''; // Clear existing table content
+
+        // Loop through the responses and display them in the table
+        data.forEach(entry => {
+          const row = document.createElement('tr');
+
+          // Add Time column with the recorded submission time
+          const timeCell = document.createElement('td');
+          timeCell.textContent = entry.time; // Use recorded submission time
+          row.appendChild(timeCell);
+
+          // Add Name column
+          const nameCell = document.createElement('td');
+          nameCell.textContent = entry.name;
+          row.appendChild(nameCell);
+
+          // Add Scores column
+          const scoreCell = document.createElement('td');
+          scoreCell.textContent = `${entry.score} / 5`;
+          row.appendChild(scoreCell);
+
+          // Append the row to the table body
+          scoreboardBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Error loading the scoreboard:', error);
+      }
+    }
+
+    // Function to navigate back to the quiz
+    function goBack() {
+      window.location.href = "quiz.html";
+    }
+
+    // Load the scoreboard when the page loads
+    window.onload = loadScoreboard;
+  </script>
+
+</body>
+</html>

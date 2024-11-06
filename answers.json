@@ -1,0 +1,30 @@
+{
+    "questions": [
+      {
+        "text": "What is the best way to encourage positive behavior in children?",
+        "options": ["Reward occasionally", "Consistently praise good behavior", "Ignore bad behavior", "Punish bad behavior"],
+        "correctAnswer": "B"
+      },
+      {
+        "text": "Which of these is most important for a child’s development?",
+        "options": ["Physical activity", "Reading", "Watching TV", "Eating snacks"],
+        "correctAnswer": "A"
+      },
+      {
+        "text": "How much sleep does a toddler need?",
+        "options": ["5-7 hours", "8-10 hours", "11-14 hours", "15-17 hours"],
+        "correctAnswer": "C"
+      },
+      {
+        "text": "What is a healthy way to handle tantrums?",
+        "options": ["Ignore the child", "Yell at the child", "Stay calm and listen", "Reward the tantrum"],
+        "correctAnswer": "C"
+      },
+      {
+        "text": "What’s a good strategy to encourage sharing?",
+        "options": ["Tell them to share", "Set a good example", "Punish if they don’t share", "Ignore them"],
+        "correctAnswer": "B"
+      }
+    ]
+  }
+  

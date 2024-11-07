@@ -12,8 +12,10 @@
   <div id="welcome-screen" class="active">
     <h1>Welcome to the Parenting Quiz!</h1>
     <p>Please enter your name to begin:</p>
-    <input type="text" id="user-name" placeholder="Your Name">
-    <button onclick="startQuiz()">Start Quiz</button>
+    <div class="input-container">
+      <input type="text" id="name-input" placeholder="Your Name" />
+    </div>
+    <button id="start-quiz-button" class="styled-btn">Start Quiz</button>
   </div>
 
   <!-- Quiz Container -->
@@ -21,10 +23,16 @@
     <h1 id="quiz-title">Parenting Quiz</h1>
     <div id="question-container">
       <p id="question-text">Loading question...</p>
-      <button onclick="submitAnswer('A')">A) Option A</button>
-      <button onclick="submitAnswer('B')">B) Option B</button>
-      <button onclick="submitAnswer('C')">C) Option C</button>
-      <button onclick="submitAnswer('D')">D) Option D</button>
+      <div id="options-container">
+        <button onclick="selectAnswer(0)" class="option-btn">A) Option A</button>
+        <button onclick="selectAnswer(1)" class="option-btn">B) Option B</button>
+        <button onclick="selectAnswer(2)" class="option-btn">C) Option C</button>
+        <button onclick="selectAnswer(3)" class="option-btn">D) Option D</button>
+      </div>
+    </div>
+    <div id="navigation-buttons">
+      <button id="prev-btn" onclick="prevQuestion()">Previous</button>
+      <button id="next-btn" onclick="nextQuestion()">Next</button>
     </div>
     <button id="submit-quiz-button" onclick="submitQuiz()">Submit Quiz</button>
   </div>
@@ -41,20 +49,25 @@
     let userName = '';
     let userAnswers = [];
 
-    // Fetch questions and answers from answers.json
-    fetch('answers.json')
-      .then(response => response.json())
-      .then(data => {
-        questions = data.questions;
-        console.log("Questions loaded:", questions);
-      })
-      .catch(error => {
-        console.error('Error loading questions:', error);
-      });
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("start-quiz-button").addEventListener("click", startQuiz);
+      
+      // Fetch questions and answers from answers.json
+      fetch('answers.json')
+        .then(response => response.json())
+        .then(data => {
+          questions = data.questions;
+          userAnswers = Array(questions.length).fill(null);
+          console.log("Questions loaded:", questions);
+        })
+        .catch(error => {
+          console.error('Error loading questions:', error);
+        });
+    });
 
     // Start the quiz after user enters their name
     function startQuiz() {
-      userName = document.getElementById('user-name').value;
+      userName = document.getElementById('name-input').value;
       if (userName && questions.length > 0) {
         document.getElementById('welcome-screen').classList.remove('active');
         document.getElementById('quiz-container').classList.add('active');
@@ -64,57 +77,79 @@
       }
     }
 
-    // Load question dynamically from the JSON file
+    // Load question dynamically
     function loadQuestion() {
       const question = questions[currentQuestionIndex];
       document.getElementById('question-text').innerText = question.text;
-      const buttons = document.querySelectorAll('#question-container button');
-      buttons.forEach((button, index) => {
+      const optionButtons = document.querySelectorAll('.option-btn');
+
+      // Load options and apply 'selected' styling if already chosen
+      optionButtons.forEach((button, index) => {
         button.innerText = question.options[index];
-        button.style.display = 'inline-block';
+        button.classList.toggle('selected', userAnswers[currentQuestionIndex] === index);
       });
+
+      // Update navigation and submit button states
+      document.getElementById('prev-btn').style.display = currentQuestionIndex === 0 ? 'none' : 'inline-block';
+      document.getElementById('next-btn').style.display = currentQuestionIndex === questions.length - 1 ? 'none' : 'inline-block';
       
-      // If it's the last question, show the "Submit Quiz" button
+      // Show the submit button only on the last question
+      const submitButton = document.getElementById('submit-quiz-button');
       if (currentQuestionIndex === questions.length - 1) {
-        document.getElementById('submit-quiz-button').classList.add('show');
+        submitButton.classList.add('show');
       } else {
-        document.getElementById('submit-quiz-button').classList.remove('show');
+        submitButton.classList.remove('show');
       }
+
+      // Enable submit if all questions are answered
+      checkAllAnswered();
     }
 
-    // Submit answer and move to the next question
-    function submitAnswer(answer) {
-      const correctAnswer = questions[currentQuestionIndex].correctAnswer;
-      userAnswers.push({ answer, correct: answer === correctAnswer });
-      currentQuestionIndex++;
-      if (currentQuestionIndex < questions.length) {
+    // Select answer function
+    function selectAnswer(optionIndex) {
+      userAnswers[currentQuestionIndex] = optionIndex;
+      loadQuestion(); // Reload to update selected option styling
+      checkAllAnswered(); // Enable submit if all questions are answered
+    }
+
+    // Navigation functions
+    function nextQuestion() {
+      if (currentQuestionIndex < questions.length - 1) {
+        currentQuestionIndex++;
         loadQuestion();
-      } else {
-        document.getElementById('submit-quiz-button').classList.add('show');
-        console.log("Reached last question, submit button should be visible");
       }
     }
 
-    // Submit the quiz results to responses.json and display thank you message
+    function prevQuestion() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        loadQuestion();
+      }
+    }
+
+    // Check if all questions are answered to enable the Submit button
+    function checkAllAnswered() {
+      const submitBtn = document.getElementById('submit-quiz-button');
+      submitBtn.disabled = !userAnswers.every(answer => answer !== null);
+    }
+
+    // Submit the quiz results and display thank you message
     async function submitQuiz() {
       console.log("Submitting quiz...");
       const data = {
         name: userName,
         answers: userAnswers,
-        time: new Date().toISOString() // Record submission time
+        time: new Date().toISOString()
       };
 
-      // POST the user responses to 'responses.json' (mock server or local server should handle this)
-      await fetch('http://localhost:8080/submit-quiz', {
+      await fetch('http://127.0.0.1:5501/scoreboard.html', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       }).then(() => {
         console.log("Quiz submitted successfully");
-        
-        // Display thank you message and the "View Scoreboard" button
-        document.getElementById('quiz-container').style.display = 'none'; // Hide quiz
-        document.getElementById('post-quiz').style.display = 'block';  // Show post-quiz screen
+        document.getElementById('quiz-container').classList.remove('active');
+        document.getElementById('post-quiz').classList.add('active');
         document.getElementById('thank-you-message').innerText = `Thank you, ${userName}!`;
       }).catch(error => {
         console.error("Failed to submit quiz:", error);
